@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VoiceKart Shopkeeper</title>
+
+  <style>
+
+    body{
+      margin:0;
+      padding:0;
+      background:#08111a;
+      font-family:Arial,sans-serif;
+      color:white;
+    }
+
+    .header{
+      background:#102030;
+      padding:18px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
+    }
+
+    .container{
+      padding:20px;
+    }
+
+    .card{
+      background:#102030;
+      border-radius:14px;
+      padding:18px;
+      margin-top:18px;
+    }
+
+    .order{
+      background:#0d1b2a;
+      padding:15px;
+      border-radius:12px;
+      margin-top:15px;
+    }
+
+    .customer{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .item{
+      margin-top:8px;
+      padding:8px;
+      background:#13283d;
+      border-radius:8px;
+    }
+
+    .status{
+      margin-top:12px;
+      font-weight:bold;
+      color:#00ff99;
+    }
+
+    button{
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      margin-top:10px;
+      margin-right:8px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .prepareBtn{
+      background:#ff9800;
+      color:black;
+    }
+
+    .readyBtn{
+      background:#00c853;
+      color:white;
+    }
+
+    .deliverBtn{
+      background:#2196f3;
+      color:white;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  🏪 VoiceKart Shopkeeper
+</div>
+
+<div class="container">
+
+  <div class="card">
+
+    <h2>📦 Live Orders</h2>
+
+    <div id="orders"></div>
+
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+
+const firebaseConfig = {
+
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE_AUTH_DOMAIN",
+  databaseURL: "PASTE_DATABASE_URL",
+  projectId: "PASTE_PROJECT_ID",
+  storageBucket: "PASTE_BUCKET",
+  messagingSenderId: "PASTE_SENDER_ID",
+  appId: "PASTE_APP_ID"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+let allOrders = [];
+
+db.ref('orders').on('value',(snapshot)=>{
+
+  const data = snapshot.val();
+
+  allOrders = [];
+
+  for(let id in data){
+
+    allOrders.push({
+
+      id:id,
+
+      ...data[id]
+
+    });
+  }
+
+  allOrders.reverse();
+
+  renderOrders();
+});
+
+function renderOrders(){
+
+  const ordersDiv =
+  document.getElementById('orders');
+
+  ordersDiv.innerHTML = '';
+
+  if(allOrders.length===0){
+
+    ordersDiv.innerHTML =
+    '<h3>No Orders Yet</h3>';
+
+    return;
+  }
+
+  allOrders.forEach(order=>{
+
+    let itemsHTML = '';
+
+    order.items.forEach(item=>{
+
+      itemsHTML += `
+
+      <div class="item">
+
+        ${item.icon}
+        ${item.qty}
+        ${item.name}
+
+      </div>
+
+      `;
+    });
+
+    ordersDiv.innerHTML += `
+
+    <div class="order">
+
+      <div class="customer">
+
+        👤 ${order.customerName}
+
+      </div>
+
+      <div>
+
+        📧 ${order.customerEmail}
+
+      </div>
+
+      <div style="margin-top:10px;">
+
+        ${itemsHTML}
+
+      </div>
+
+      <div class="status">
+
+        Status:
+        ${order.status}
+
+      </div>
+
+      <button
+      class="prepareBtn"
+      onclick="updateStatus(
+      '${order.id}',
+      'preparing'
+      )">
+
+      Preparing
+
+      </button>
+
+      <button
+      class="readyBtn"
+      onclick="updateStatus(
+      '${order.id}',
+      'ready'
+      )">
+
+      Ready
+
+      </button>
+
+      <button
+      class="deliverBtn"
+      onclick="updateStatus(
+      '${order.id}',
+      'delivered'
+      )">
+
+      Delivered
+
+      </button>
+
+    </div>
+
+    `;
+  });
+}
+
+function updateStatus(orderId,newStatus){
+
+  db.ref('orders/' + orderId)
+  .update({
+
+    status:newStatus
+
+  });
+
+  alert(
+    'Order marked as ' +
+    newStatus
+  );
+}
+
+</script>
+
+</body>
+</html>
